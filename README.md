@@ -92,17 +92,36 @@ Add to your MCP settings:
 #### Cursor/Windsurf
 Add to your MCP configuration:
 
+**For Windows:**
 ```json
 {
   "mcpServers": {
     "public-data": {
       "command": "python",
       "args": ["src/server.py"],
-      "cwd": "/path/to/universal-public-data-mcp"
+      "cwd": "C:\\Users\\YourUsername\\path\\to\\universal-public-data-mcp-server"
     }
   }
 }
 ```
+
+**For macOS/Linux:**
+```json
+{
+  "mcpServers": {
+    "public-data": {
+      "command": "python",
+      "args": ["src/server.py"],
+      "cwd": "/Users/YourUsername/path/to/universal-public-data-mcp-server"
+    }
+  }
+}
+```
+
+> **⚠️ Important**: Replace the `cwd` path with your actual project directory:
+> - Windows: Use double backslashes `\\` (e.g., `"C:\\Users\\mihir\\OneDrive\\Documents\\New folder"`)
+> - macOS/Linux: Use forward slashes `/` (e.g., `"/home/username/projects/universal-public-data-mcp-server"`)
+> - Ensure `python` is in your PATH or use the full path to your Python interpreter
 
 ## 🔧 Available Tools
 
