@@ -217,7 +217,7 @@ api_keys:
 
 3. **Replace the Path**
    - Replace `C:\\Users\\YourUsername\\path\\to\\universal-public-data-mcp-server` with your actual project path
-   - Example: `"C:\\Users\\mihir\\OneDrive\\Documents\\universal-public-data-mcp-server"`
+   - Example: `"C:\\Users\\alex\\Drive\\Documents\\universal-public-data-mcp-server"`
 
 4. **Path Format Guidelines**
    - **Windows**: Use double backslashes `\\` in JSON
