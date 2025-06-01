@@ -1,44 +1,41 @@
-# MCP Core Dependencies
+# Core MCP and server dependencies
 mcp>=1.0.0
-pydantic>=2.0.0
-
-# HTTP and API clients
 httpx>=0.25.0
-aiohttp>=3.8.0
-requests>=2.31.0
-
-# Data processing
-pandas>=2.0.0
-numpy>=1.24.0
-
-# Caching and performance
-redis>=5.0.0
-# aioredis>=2.0.0  # Optional - has Python 3.13 compatibility issues
-cachetools>=5.3.0
-
-# RSS and feed parsing
-feedparser>=6.0.0
-beautifulsoup4>=4.12.0
-
-# Data validation and parsing
-xmltodict>=0.13.0
-python-dateutil>=2.8.0
-pytz>=2023.3
-
-# Optional dependencies for specific APIs
-python-whois>=0.8.0
-yfinance>=0.2.0
-
-# Logging and monitoring
 structlog>=23.1.0
+pydantic>=2.0.0
+PyYAML>=6.0
 
-# Configuration
-python-dotenv>=1.0.0
-pyyaml>=6.0.0
+# Async and utilities
+asyncio-mqtt>=0.13.0
+aiofiles>=23.0.0
+
+# Caching and data structures
+cachetools>=5.3.0
+aioredis>=2.0.0  # Optional Redis support
+
+# Scientific and data processing
+yfinance>=0.2.18
+feedparser>=6.0.10
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# System monitoring and metrics
+psutil>=5.9.0
+
+# Data validation and quality
+python-dateutil>=2.8.0
+
+# Optional dependencies for enhanced features
+# Uncomment if you want advanced features:
+# numpy>=1.24.0
+# pandas>=2.0.0
+# matplotlib>=3.7.0  # For data visualization
+# plotly>=5.15.0     # For interactive charts
+# fastapi>=0.100.0   # For REST API interface
+# uvicorn>=0.23.0    # For serving FastAPI
 
 # Development dependencies (optional)
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-black>=23.7.0
-isort>=5.12.0
-mypy>=1.5.0 
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+# black>=23.7.0
+# mypy>=1.5.0 

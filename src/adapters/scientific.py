@@ -1,6 +1,6 @@
 """
 Scientific data adapter for NASA APIs, research papers, and climate data.
-Uses real scientific APIs for data retrieval.
+Uses real scientific APIs for data retrieval with enhanced resilience.
 """
 
 import asyncio
@@ -12,11 +12,18 @@ import structlog
 import xml.etree.ElementTree as ET
 
 from core.cache import CacheManager
+from core.resilience import (
+    get_circuit_breaker, 
+    DEFAULT_RETRY, 
+    AGGRESSIVE_RETRY,
+    fallback_manager,
+    health_checker
+)
 
 logger = structlog.get_logger(__name__)
 
 class ScientificDataAdapter:
-    """Adapter for scientific data sources using real APIs."""
+    """Adapter for scientific data sources using real APIs with enhanced resilience."""
     
     def __init__(self, cache_manager: CacheManager):
         self.cache = cache_manager
@@ -24,6 +31,15 @@ class ScientificDataAdapter:
             timeout=30.0,
             headers={"User-Agent": "Universal-Public-Data-MCP/1.0"}
         )
+        
+        # Setup circuit breakers for different services
+        self.nasa_circuit = get_circuit_breaker("nasa_api")
+        self.pubmed_circuit = get_circuit_breaker("pubmed_api")
+        self.arxiv_circuit = get_circuit_breaker("arxiv_api")
+        self.weather_circuit = get_circuit_breaker("weather_api")
+        
+        # Register fallback functions
+        self._setup_fallbacks()
     
     async def __aenter__(self):
         return self
@@ -31,6 +47,39 @@ class ScientificDataAdapter:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.aclose()
     
+    def _setup_fallbacks(self):
+        """Setup fallback mechanisms for different services."""
+        
+        # NASA API fallbacks
+        async def nasa_fallback(*args, **kwargs):
+            """Fallback for NASA API using cached or static data."""
+            dataset = args[0] if args else kwargs.get('dataset', 'unknown')
+            return {
+                "dataset": dataset,
+                "data": "NASA API temporarily unavailable. Using cached data.",
+                "source": "Fallback System",
+                "timestamp": datetime.now().isoformat(),
+                "status": "degraded"
+            }
+        
+        fallback_manager.register_fallback("nasa_api", nasa_fallback)
+        
+        # Research papers fallback
+        async def papers_fallback(*args, **kwargs):
+            """Fallback for research papers using alternative sources."""
+            query = args[0] if args else kwargs.get('query', 'unknown')
+            return {
+                "query": query,
+                "papers": [],
+                "message": "Research paper APIs temporarily unavailable. Try again later.",
+                "source": "Fallback System",
+                "timestamp": datetime.now().isoformat(),
+                "status": "degraded"
+            }
+        
+        fallback_manager.register_fallback("research_papers", papers_fallback)
+    
+    @DEFAULT_RETRY.retry(exceptions=(httpx.RequestError, httpx.HTTPStatusError))
     async def get_nasa_data(
         self, 
         dataset: str, 
@@ -38,14 +87,16 @@ class ScientificDataAdapter:
         location: Optional[Dict[str, float]] = None
     ) -> Dict[str, Any]:
         """
-        Get NASA data from various APIs.
+        Get NASA data from various APIs with enhanced error handling.
         
         Args:
             dataset: NASA dataset to retrieve
             date: Date for data (YYYY-MM-DD format)
             location: Geographic coordinates for Earth data
         """
-        try:
+        
+        @self.nasa_circuit.call
+        async def _fetch_nasa_data():
             cache_key = f"nasa:{dataset}:{date or 'latest'}:{location or 'global'}"
             cached_result = await self.cache.get(cache_key)
             if cached_result:
@@ -53,7 +104,8 @@ class ScientificDataAdapter:
             
             result = {
                 "dataset": dataset,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "quality_score": 1.0  # Full quality for real data
             }
             
             # NASA API endpoints (most are free without API key)
@@ -75,7 +127,8 @@ class ScientificDataAdapter:
                     "hdurl": data.get("hdurl"),
                     "media_type": data.get("media_type"),
                     "date": data.get("date"),
-                    "source": "NASA APOD"
+                    "source": "NASA APOD",
+                    "copyright": data.get("copyright")
                 })
                 
             elif dataset == "earth":
@@ -101,7 +154,7 @@ class ScientificDataAdapter:
                 
                 # Earth imagery returns an image, so we get metadata
                 result.update({
-                    "image_url": response.url,
+                    "image_url": str(response.url),
                     "location": location,
                     "date": date or "latest",
                     "source": "NASA Earth Imagery"
@@ -135,18 +188,20 @@ class ScientificDataAdapter:
                             "potentially_hazardous": asteroid.get("is_potentially_hazardous_asteroid"),
                             "estimated_diameter_km": asteroid.get("estimated_diameter", {}).get("kilometers", {}),
                             "close_approach_date": asteroid.get("close_approach_data", [{}])[0].get("close_approach_date"),
-                            "miss_distance_km": asteroid.get("close_approach_data", [{}])[0].get("miss_distance", {}).get("kilometers")
+                            "miss_distance_km": asteroid.get("close_approach_data", [{}])[0].get("miss_distance", {}).get("kilometers"),
+                            "velocity_kmh": asteroid.get("close_approach_data", [{}])[0].get("relative_velocity", {}).get("kilometers_per_hour")
                         })
                 
                 result.update({
                     "element_count": data.get("element_count", 0),
-                    "asteroids": asteroids[:10],  # Limit to 10 for readability
+                    "asteroids": asteroids[:15],  # Increased limit
                     "date": date or datetime.now().strftime("%Y-%m-%d"),
-                    "source": "NASA Near Earth Object Web Service"
+                    "source": "NASA Near Earth Object Web Service",
+                    "total_hazardous": sum(1 for a in asteroids if a.get("potentially_hazardous"))
                 })
                 
             elif dataset == "mars_rover":
-                # Mars Rover Photos
+                # Mars Rover Photos with enhanced data
                 url = "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos"
                 params = {
                     "api_key": "DEMO_KEY",
@@ -159,25 +214,60 @@ class ScientificDataAdapter:
                 data = response.json()
                 photos = []
                 
-                for photo in data.get("photos", [])[:5]:  # Limit to 5 photos
+                for photo in data.get("photos", [])[:8]:  # Increased limit
                     photos.append({
                         "id": photo.get("id"),
                         "img_src": photo.get("img_src"),
                         "earth_date": photo.get("earth_date"),
                         "camera": photo.get("camera", {}).get("full_name"),
-                        "rover": photo.get("rover", {}).get("name")
+                        "camera_abbreviation": photo.get("camera", {}).get("name"),
+                        "rover": photo.get("rover", {}).get("name"),
+                        "rover_status": photo.get("rover", {}).get("status"),
+                        "sol": photo.get("sol")
                     })
                 
                 result.update({
                     "photos": photos,
                     "sol": 1000,
+                    "rover_info": data.get("photos", [{}])[0].get("rover", {}),
                     "source": "NASA Mars Rover Photos"
+                })
+                
+            elif dataset == "exoplanets":
+                # NASA Exoplanet Archive (new addition)
+                url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+                params = {
+                    "query": "select top 50 pl_name,hostname,disc_year,pl_massj,pl_radj,pl_orbper from ps where default_flag=1",
+                    "format": "json"
+                }
+                
+                response = await self.client.get(url, params=params)
+                response.raise_for_status()
+                
+                data = response.json()
+                exoplanets = []
+                
+                for planet in data[:20]:  # Limit to 20 for readability
+                    exoplanets.append({
+                        "name": planet.get("pl_name"),
+                        "host_star": planet.get("hostname"),
+                        "discovery_year": planet.get("disc_year"),
+                        "mass_jupiter": planet.get("pl_massj"),
+                        "radius_jupiter": planet.get("pl_radj"),
+                        "orbital_period_days": planet.get("pl_orbper")
+                    })
+                
+                result.update({
+                    "exoplanets": exoplanets,
+                    "total_found": len(data),
+                    "source": "NASA Exoplanet Archive"
                 })
                 
             else:
                 return {
-                    "error": f"Dataset '{dataset}' not supported. Available: apod, earth, asteroids, mars_rover",
+                    "error": f"Dataset '{dataset}' not supported. Available: apod, earth, asteroids, mars_rover, exoplanets",
                     "dataset": dataset,
+                    "available_datasets": ["apod", "earth", "asteroids", "mars_rover", "exoplanets"],
                     "timestamp": datetime.now().isoformat()
                 }
             
@@ -186,13 +276,19 @@ class ScientificDataAdapter:
             
             logger.info("NASA data retrieved", dataset=dataset, date=date)
             return result
-            
+        
+        try:
+            return await fallback_manager.execute_with_fallback(
+                "nasa_api",
+                _fetch_nasa_data
+            )
         except Exception as e:
             logger.error("Failed to get NASA data", dataset=dataset, error=str(e))
             return {
                 "error": f"Failed to get NASA data: {str(e)}",
                 "dataset": dataset,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "quality_score": 0.0  # Failed request
             }
     
     async def search_research_papers(

@@ -11,6 +11,8 @@ import asyncio
 import json
 import logging
 import sys
+import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import structlog
@@ -27,6 +29,7 @@ from adapters.geographic import GeographicDataAdapter
 from adapters.technology import TechnologyDataAdapter
 from core.cache import CacheManager
 from core.config import Config
+from core.monitoring import dashboard_generator, metrics_collector
 
 # Configure structured logging
 structlog.configure(
@@ -53,21 +56,36 @@ class UniversalPublicDataServer:
     """Main MCP server class that provides access to multiple public data sources."""
     
     def __init__(self):
-        self.config = Config()
+        """Initialize the MCP server with all adapters and monitoring."""
+        # Load configuration
+        self.config = Config.load()
+        
+        # Initialize cache manager
         self.cache = CacheManager(self.config)
         
-        # Initialize data adapters
+        # Initialize monitoring
+        self.metrics = metrics_collector
+        
+        # Initialize adapters
+        self._init_adapters()
+        
+        # Initialize MCP server
+        self.server = Server("universal-public-data")
+        
+        # Register tools
+        self._register_tools()
+        
+        logger.info("Universal Public Data MCP Server initialized")
+
+    def _init_adapters(self):
+        """Initialize all data adapters."""
         self.government = GovernmentDataAdapter(self.cache)
         self.scientific = ScientificDataAdapter(self.cache)
         self.financial = FinancialDataAdapter(self.cache)
         self.news = NewsDataAdapter(self.cache)
         self.geographic = GeographicDataAdapter(self.cache)
         self.technology = TechnologyDataAdapter(self.cache)
-        
-        # Create MCP server
-        self.server = Server("universal-public-data")
-        self._register_tools()
-        
+
     def _register_tools(self):
         """Register all available tools with the MCP server."""
         
@@ -541,16 +559,102 @@ class UniversalPublicDataServer:
                 )
             ])
             
+            # System monitoring tools
+            tools.extend([
+                types.Tool(
+                    name="get_system_status",
+                    description="Get comprehensive system health and performance metrics",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    },
+                ),
+                types.Tool(
+                    name="get_api_metrics",
+                    description="Get detailed metrics for API performance and usage",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "api_name": {
+                                "type": "string",
+                                "description": "Specific API to get metrics for (optional)"
+                            }
+                        },
+                        "required": []
+                    },
+                ),
+                types.Tool(
+                    name="get_cache_stats",
+                    description="Get cache performance statistics and hit ratios",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    },
+                ),
+            ])
+            
             return tools
 
         # Tool implementations
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[types.TextContent]:
             """Handle tool calls by routing to appropriate adapters."""
+            start_time = time.time()
+            
             try:
                 logger.info("Tool called", tool_name=name, arguments=arguments)
                 
                 result = None
+                
+                # Route monitoring tools
+                if name == "get_system_status":
+                    dashboard_data = await dashboard_generator.generate_dashboard()
+                    self.metrics.record_request("system_monitoring", time.time() - start_time, True)
+                    
+                    return [types.TextContent(
+                        type="text",
+                        text=json.dumps(dashboard_data, indent=2, default=str)
+                    )]
+                
+                elif name == "get_api_metrics":
+                    api_name = arguments.get("api_name")
+                    
+                    if api_name:
+                        api_metrics = self.metrics.get_api_metrics()
+                        if api_name in api_metrics:
+                            result = {api_name: api_metrics[api_name]}
+                        else:
+                            result = {"error": f"No metrics found for API: {api_name}"}
+                    else:
+                        result = self.metrics.get_api_metrics()
+                    
+                    result["timestamp"] = datetime.now().isoformat()
+                    self.metrics.record_request("api_metrics", time.time() - start_time, True)
+                    
+                    return [types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2, default=str)
+                    )]
+                
+                elif name == "get_cache_stats":
+                    cache_stats = await self.cache.get_cache_stats()
+                    hit_ratio = await self.cache.get_hit_ratio()
+                    
+                    result = {
+                        "cache_stats": cache_stats,
+                        "hit_ratio": hit_ratio,
+                        "hit_ratio_percent": hit_ratio * 100,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    self.metrics.record_request("cache_stats", time.time() - start_time, True)
+                    
+                    return [types.TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2, default=str)
+                    )]
                 
                 # Government data tools
                 if name == "get_census_data":
@@ -563,6 +667,7 @@ class UniversalPublicDataServer:
                 # Scientific data tools
                 elif name == "get_nasa_data":
                     result = await self.scientific.get_nasa_data(**arguments)
+                    self.metrics.record_request("nasa", time.time() - start_time, "error" not in result)
                 elif name == "search_research_papers":
                     result = await self.scientific.search_research_papers(**arguments)
                 elif name == "get_climate_data":
@@ -612,6 +717,7 @@ class UniversalPublicDataServer:
                 )]
                 
             except Exception as e:
+                self.metrics.record_request(name, time.time() - start_time, False)
                 logger.error("Tool execution failed", tool_name=name, error=str(e), exc_info=True)
                 return [types.TextContent(
                     type="text",

@@ -49,6 +49,18 @@ class CacheManager:
         # Rate limiting storage
         self.rate_limits: Dict[str, Dict[str, Any]] = {}
         
+        # Cache warming storage
+        self.cache_warming_tasks: Dict[str, asyncio.Task] = {}
+        
+        # Cache statistics
+        self.stats = {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "errors": 0,
+            "warm_cache_hits": 0
+        }
+        
         # Initialize Redis if configured and available
         if self.redis_enabled:
             asyncio.create_task(self._init_redis())
@@ -83,7 +95,7 @@ class CacheManager:
         return key_data
     
     async def get(self, key: str) -> Optional[Any]:
-        """Get value from cache."""
+        """Get value from cache with improved statistics."""
         if not self.enabled:
             return None
         
@@ -92,17 +104,25 @@ class CacheManager:
             if self.redis_enabled and self.redis_client:
                 value = await self.redis_client.get(key)
                 if value is not None:
+                    self.stats["hits"] += 1
                     return json.loads(value)
             
             # Fall back to memory cache
-            return self.memory_cache.get(key)
+            result = self.memory_cache.get(key)
+            if result is not None:
+                self.stats["hits"] += 1
+                return result
+            
+            self.stats["misses"] += 1
+            return None
             
         except Exception as e:
+            self.stats["errors"] += 1
             logger.warning("Cache get failed", key=key, error=str(e))
             return None
     
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
-        """Set value in cache with optional TTL."""
+        """Set value in cache with improved error handling."""
         if not self.enabled:
             return False
         
@@ -119,9 +139,11 @@ class CacheManager:
             
             # Always store in memory cache as backup
             self.memory_cache[key] = value
+            self.stats["sets"] += 1
             return True
             
         except Exception as e:
+            self.stats["errors"] += 1
             logger.warning("Cache set failed", key=key, error=str(e))
             return False
     
@@ -290,7 +312,8 @@ class CacheManager:
             "rate_limits": {
                 "active_identifiers": len(self.rate_limits),
                 "enabled": self.config.rate_limit.enabled
-            }
+            },
+            "cache_stats": self.stats
         }
         
         # Get Redis stats if available
@@ -303,6 +326,48 @@ class CacheManager:
                 logger.warning("Failed to get Redis stats", error=str(e))
         
         return stats
+
+    async def warm_cache(self, key: str, warm_func: Callable, ttl: Optional[int] = None, interval: int = 3600):
+        """
+        Warm cache with periodic updates for frequently accessed data.
+        
+        Args:
+            key: Cache key to warm
+            warm_func: Async function to generate fresh data
+            ttl: Cache TTL in seconds
+            interval: Refresh interval in seconds
+        """
+        async def _warm_task():
+            while True:
+                try:
+                    # Generate fresh data
+                    fresh_data = await warm_func()
+                    await self.set(key, fresh_data, ttl)
+                    self.stats["warm_cache_hits"] += 1
+                    logger.debug("Cache warmed", key=key)
+                    
+                    # Wait for next refresh
+                    await asyncio.sleep(interval)
+                    
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    logger.warning("Cache warming failed", key=key, error=str(e))
+                    await asyncio.sleep(60)  # Wait 1 minute before retry
+        
+        # Cancel existing warming task if any
+        if key in self.cache_warming_tasks:
+            self.cache_warming_tasks[key].cancel()
+        
+        # Start new warming task
+        self.cache_warming_tasks[key] = asyncio.create_task(_warm_task())
+
+    async def get_hit_ratio(self) -> float:
+        """Calculate cache hit ratio."""
+        total_requests = self.stats["hits"] + self.stats["misses"]
+        if total_requests == 0:
+            return 0.0
+        return self.stats["hits"] / total_requests
 
 class RateLimitExceededError(Exception):
     """Raised when rate limit is exceeded."""
