@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "universal-public-data": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\mihir\\OneDrive\\Documents\\mcpproject\\src\\server.py"
+      ],
+      "cwd": "C:\\Users\\mihir\\OneDrive\\Documents\\mcpproject",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": "C:\\Users\\mihir\\OneDrive\\Documents\\mcpproject"
+      }
+    }
+  }
+} 

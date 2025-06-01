@@ -17,7 +17,8 @@ from cachetools import TTLCache
 try:
     import aioredis
     REDIS_AVAILABLE = True
-except ImportError:
+except (ImportError, TypeError) as e:
+    # Handle both import errors and Python 3.13 compatibility issues
     REDIS_AVAILABLE = False
     aioredis = None
 
@@ -63,7 +64,9 @@ class CacheManager:
         
         # Initialize Redis if configured and available
         if self.redis_enabled:
-            asyncio.create_task(self._init_redis())
+            # Don't create the task immediately - wait for first use
+            self._redis_init_task = None
+            logger.info("Redis cache will be initialized on first use")
     
     async def _init_redis(self):
         """Initialize Redis connection."""

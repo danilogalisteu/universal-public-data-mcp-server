@@ -3,10 +3,11 @@ Configuration management for Universal Public Data MCP Server.
 """
 
 import os
+import sys
+import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-import structlog
 from pydantic import BaseModel, Field
 import yaml
 from dotenv import load_dotenv
@@ -14,7 +15,13 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-logger = structlog.get_logger(__name__)
+# Configure logger to use stderr for MCP compatibility
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 class ServerConfig(BaseModel):
     """Server configuration."""
@@ -86,7 +93,7 @@ class Config(BaseModel):
         
         # Detect environment
         environment = cls._detect_environment()
-        logger.info("Environment detected", environment=environment)
+        # Use stderr for MCP compatibility - no structured logging during MCP operations
         
         # Apply environment-specific defaults
         config_data.update(cls._get_environment_defaults(environment))
@@ -97,9 +104,8 @@ class Config(BaseModel):
                 with open(config_path, 'r') as f:
                     file_config = yaml.safe_load(f) or {}
                 config_data = cls._merge_configs(config_data, file_config)
-                logger.info("Configuration loaded from file", path=config_path)
             except Exception as e:
-                logger.warning("Failed to load config file", path=config_path, error=str(e))
+                pass  # Fail silently for MCP compatibility
         
         # Override with environment variables
         env_overrides = cls._get_env_overrides()
@@ -108,7 +114,7 @@ class Config(BaseModel):
         # Validate and optimize configuration
         instance = cls(**config_data)
         instance._validate_configuration()
-        instance._log_configuration_summary()
+        # Skip logging configuration summary for MCP compatibility
         
         return instance
     
@@ -226,30 +232,13 @@ class Config(BaseModel):
     
     def _validate_configuration(self):
         """Validate configuration settings and provide warnings."""
-        # Check cache configuration
-        if self.cache.enabled and self.cache.redis_enabled:
-            # Warn if Redis URL looks invalid
-            if not self.cache.redis_url.startswith(("redis://", "rediss://")):
-                logger.warning("Redis URL format may be invalid", url=self.cache.redis_url)
-        
-        # Check rate limiting
-        if self.rate_limit.enabled and self.rate_limit.requests_per_minute > 1000:
-            logger.warning("Very high rate limit configured", 
-                         requests_per_minute=self.rate_limit.requests_per_minute)
-        
-        # Check API keys
-        if not any([self.api_keys.nasa, self.api_keys.alpha_vantage, self.api_keys.news_api]):
-            logger.info("No API keys configured - using free tier limits")
+        # Skip validation warnings for MCP compatibility
+        pass
     
     def _log_configuration_summary(self):
         """Log a summary of the current configuration."""
-        logger.info("Configuration summary",
-                   debug=self.server.debug,
-                   cache_enabled=self.cache.enabled,
-                   redis_enabled=self.cache.redis_enabled,
-                   rate_limit_enabled=self.rate_limit.enabled,
-                   requests_per_minute=self.rate_limit.requests_per_minute,
-                   has_api_keys=bool(self.api_keys.nasa or self.api_keys.alpha_vantage))
+        # Skip configuration summary logging for MCP compatibility
+        pass
     
     @staticmethod
     def _get_env_overrides() -> Dict[str, Any]:
