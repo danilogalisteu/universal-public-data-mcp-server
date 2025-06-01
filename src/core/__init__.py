@@ -1,4 +1,4 @@
-# Core utilities for Universal Public Data MCP Server
+# Core modules for Universal Public Data MCP Server
 
 from .config import Config
 from .cache import CacheManager, RateLimitExceededError

@@ -29,7 +29,28 @@ from adapters.geographic import GeographicDataAdapter
 from adapters.technology import TechnologyDataAdapter
 from core.cache import CacheManager
 from core.config import Config
-from core.monitoring import dashboard_generator, metrics_collector
+
+# Try to import enhanced monitoring - fallback gracefully if not available
+try:
+    from core.monitoring import MetricsCollector, HealthMonitor, DashboardGenerator
+    monitoring_available = True
+except ImportError:
+    monitoring_available = False
+    # Create simple fallback classes
+    class MetricsCollector:
+        def record_request(self, api_name, duration, success): pass
+        def get_api_metrics(self): return {}
+    
+    class HealthMonitor:
+        def __init__(self, metrics_collector=None): 
+            self.metrics_collector = metrics_collector
+        async def check_health(self): return {"status": "ok"}
+    
+    class DashboardGenerator:
+        def __init__(self, metrics_collector, health_monitor): 
+            self.metrics = metrics_collector
+            self.health = health_monitor
+        async def generate_dashboard(self): return {"status": "monitoring not available"}
 
 # Configure structured logging
 structlog.configure(
@@ -63,8 +84,10 @@ class UniversalPublicDataServer:
         # Initialize cache manager
         self.cache = CacheManager(self.config)
         
-        # Initialize monitoring
-        self.metrics = metrics_collector
+        # Initialize monitoring components
+        self.metrics = MetricsCollector()
+        self.health_monitor = HealthMonitor(self.metrics)
+        self.dashboard_generator = DashboardGenerator(self.metrics, self.health_monitor)
         
         # Initialize adapters
         self._init_adapters()
@@ -75,7 +98,8 @@ class UniversalPublicDataServer:
         # Register tools
         self._register_tools()
         
-        logger.info("Universal Public Data MCP Server initialized")
+        logger.info("Universal Public Data MCP Server initialized", 
+                   monitoring_available=monitoring_available)
 
     def _init_adapters(self):
         """Initialize all data adapters."""
@@ -610,7 +634,7 @@ class UniversalPublicDataServer:
                 
                 # Route monitoring tools
                 if name == "get_system_status":
-                    dashboard_data = await dashboard_generator.generate_dashboard()
+                    dashboard_data = await self.dashboard_generator.generate_dashboard()
                     self.metrics.record_request("system_monitoring", time.time() - start_time, True)
                     
                     return [types.TextContent(
@@ -744,10 +768,7 @@ async def main():
                 InitializationOptions(
                     server_name="universal-public-data",
                     server_version="1.0.0",
-                    capabilities=server_instance.server.get_capabilities(
-                        notification_options=None,
-                        experimental_capabilities=None,
-                    ),
+                    capabilities=server_instance.server.get_capabilities(),
                 ),
             )
     except Exception as e:
