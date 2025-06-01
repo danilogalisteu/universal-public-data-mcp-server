@@ -1,264 +1,196 @@
-# Demo Tutorials & Examples
+# 📚 Universal Public Data MCP Server - Demo Tutorial
 
-This folder contains hands-on Jupyter notebook tutorials demonstrating how to use the Universal Public Data MCP Server for real-world data analysis and AI applications.
+Welcome to the comprehensive demo tutorial for the Universal Public Data MCP Server! This hands-on tutorial demonstrates how to access real-time data from multiple APIs through a unified interface.
 
-## 📚 Available Tutorials
+## 🚀 What You'll Learn
 
-### 🚀 Getting Started
-- **[01_quick_start.ipynb](01_quick_start.ipynb)** - Basic setup and first API calls
-- **[02_understanding_tools.ipynb](02_understanding_tools.ipynb)** - Comprehensive overview of all 20+ tools
+This comprehensive tutorial covers:
 
-### 💰 Financial Analysis
-- **[03_financial_analysis.ipynb](03_financial_analysis.ipynb)** - Stock analysis, crypto tracking, market sentiment
-- **[04_investment_research.ipynb](04_investment_research.ipynb)** - Multi-source investment analysis workflow
+- 💰 **Real-time financial data** from Yahoo Finance and CoinGecko
+- 📰 **Breaking news feeds** from technology RSS sources
+- 🌤️ **Weather data** from wttr.in API
+- 📊 **Portfolio analysis** with live market data
+- 🛠️ **Production patterns** for error handling and data processing
 
-### 🏛️ Economic Research
-- **[05_economic_indicators.ipynb](05_economic_indicators.ipynb)** - GDP, unemployment, inflation analysis
-- **[06_demographic_analysis.ipynb](06_demographic_analysis.ipynb)** - Census data and population studies
+## 📋 Tutorial Overview
 
-### 🔬 Scientific Data Mining
-- **[07_nasa_space_data.ipynb](07_nasa_space_data.ipynb)** - NASA APIs, astronomy, and Earth science
-- **[08_research_discovery.ipynb](08_research_discovery.ipynb)** - PubMed and ArXiv paper analysis
+### 🎯 **Single Comprehensive Tutorial**
 
-### 📰 Media Monitoring
-- **[09_news_analysis.ipynb](09_news_analysis.ipynb)** - Breaking news and sentiment tracking
-- **[10_trend_analysis.ipynb](10_trend_analysis.ipynb)** - Cross-source trend identification
+**`universal_mcp_demo.ipynb`** - Complete hands-on demonstration
 
-### 🌍 Environmental Monitoring
-- **[11_climate_weather.ipynb](11_climate_weather.ipynb)** - Weather data and climate analysis
-- **[12_disaster_monitoring.ipynb](12_disaster_monitoring.ipynb)** - Natural disaster tracking and alerts
+This all-in-one tutorial includes:
 
-### 💻 Technology Insights
-- **[13_github_trends.ipynb](13_github_trends.ipynb)** - Open source trends and development metrics
-- **[14_comprehensive_dashboard.ipynb](14_comprehensive_dashboard.ipynb)** - Multi-source data dashboard
+1. **💰 Financial Data Demo**
+   - Real-time Apple stock data from Yahoo Finance
+   - Bitcoin cryptocurrency data from CoinGecko
+   - Live market prices, volume, and market cap
 
-## 🛠️ Setup Instructions
+2. **📊 Portfolio Analysis**
+   - Multi-stock portfolio with AAPL, GOOGL, MSFT, TSLA
+   - Live portfolio valuation and percentage allocation
+   - Real-time price updates and total value calculation
 
-### 1. Install Dependencies
+3. **📰 Breaking News**
+   - Technology news from TechCrunch and Ars Technica
+   - RSS feed parsing and article extraction
+   - Real-time news updates
 
+4. **🌤️ Weather Data**
+   - Current weather conditions for multiple cities
+   - Temperature, humidity, wind speed, and visibility
+   - Live weather data from wttr.in
+
+## 🛠️ Getting Started
+
+### Option 1: Google Colab (Recommended)
+1. Upload `universal_mcp_demo.ipynb` to Google Colab
+2. Run the cells in order
+3. No setup required - all dependencies are installed automatically!
+
+### Option 2: Local Setup
 ```bash
-# Core requirements
-pip install jupyter pandas matplotlib seaborn plotly
+# Clone the repository
+git clone https://github.com/inamdarmihir/universal-public-data-mcp-server.git
+cd universal-public-data-mcp-server/demos
 
-# Optional: Enhanced visualization
-pip install dash streamlit
+# Install dependencies
+pip install -r requirements.txt
 
-# Optional: Advanced analysis
-pip install scikit-learn numpy scipy
+# Launch Jupyter
+jupyter notebook universal_mcp_demo.ipynb
 ```
 
-### 2. Start the MCP Server
+## 📦 Dependencies
 
-```bash
-# In project root directory
-cd ..
-python src/server.py
+The tutorial requires these packages (automatically installed in Colab):
+
+```
+yfinance>=0.2.0        # Yahoo Finance API
+httpx>=0.25.0          # HTTP client for async requests
+feedparser>=6.0.0      # RSS feed parsing
+beautifulsoup4>=4.12.0 # HTML parsing
+requests>=2.31.0       # HTTP requests
 ```
 
-### 3. Launch Jupyter
+## 🌟 Key Features
 
-```bash
-# In demos directory
-cd demos
-jupyter notebook
+### ✅ **Real Data, No Mocks**
+- All data comes from live APIs
+- Yahoo Finance for stock prices
+- CoinGecko for cryptocurrency
+- RSS feeds for breaking news
+- wttr.in for weather conditions
+
+### ✅ **Production-Ready Patterns**
+- Error handling and graceful failures
+- Timeout management for API calls
+- Clean data formatting and display
+- Modular function design
+
+### ✅ **Educational Value**
+- Step-by-step explanations
+- Clear code comments
+- Real-world use cases
+- Best practices demonstration
+
+## 🎯 Sample Output
+
+When you run the tutorial, you'll see output like:
+
+```
+🍎 APPLE INC. (AAPL) - LIVE DATA
+========================================
+💰 Current Price: $230.45
+📈 52W High: $237.23
+📉 52W Low: $164.08
+🏢 Market Cap: 3,500,234,567,890
+📊 Volume: 45,678,901
+🕐 Updated: 2024-01-15 14:23:45
+
+✨ Real data from Yahoo Finance API!
 ```
 
-## 📊 What You'll Learn
+## 🚀 About the Full MCP Server
 
-### Data Integration
-- Connect to 20+ real public APIs
-- Handle different data formats and structures
-- Implement caching for performance optimization
-- Manage API rate limits and error handling
+This tutorial demonstrates a simplified version of the Universal Public Data MCP Server. The complete project includes:
 
-### Analysis Techniques
-- **Financial Analysis**: Portfolio tracking, risk assessment, market correlation
-- **Economic Research**: Indicator analysis, trend forecasting, regional comparisons  
-- **Scientific Discovery**: Paper analysis, research trend identification, space data visualization
-- **Media Intelligence**: Sentiment analysis, news trend tracking, information synthesis
-- **Environmental Monitoring**: Climate pattern analysis, disaster prediction, pollution tracking
-- **Technology Insights**: Development trend analysis, repository metrics, domain research
+### **6 Data Categories**
+- **💰 Financial**: Yahoo Finance, CoinGecko, Exchange rates
+- **📰 News**: RSS feeds, Breaking news, Sentiment analysis  
+- **🏛️ Government**: Census data, Economic indicators, SEC filings
+- **🌍 Geographic**: Weather, Air quality, Disaster alerts
+- **🔬 Scientific**: NASA data, Research papers, Climate data
+- **💻 Technology**: GitHub trends, Domain info, Tech metrics
 
-### Visualization & Dashboards
-- Create interactive charts with Plotly
-- Build real-time dashboards with Streamlit/Dash
-- Generate publication-ready plots with Matplotlib/Seaborn
-- Design multi-source data visualizations
+### **Production Features**
+- **Redis Caching**: High-performance data caching
+- **Rate Limiting**: Intelligent API quota management
+- **Error Handling**: Comprehensive error recovery
+- **Async Operations**: Scalable concurrent processing
+- **MCP Protocol**: Standardized interface for AI applications
 
-### Real-World Applications
-- **Investment Research Platform**: Multi-source market analysis
-- **Economic Policy Analysis**: Government data integration and visualization  
-- **Research Intelligence**: Academic paper discovery and trend analysis
-- **News Monitoring System**: Real-time media tracking and sentiment analysis
-- **Environmental Dashboard**: Climate and disaster monitoring
-- **Technology Trend Tracker**: Open source development insights
+### **20+ API Tools**
+The full server provides 20+ specialized tools across all categories, each with:
+- Production-grade error handling
+- Intelligent caching strategies
+- Rate limiting and quota management
+- Comprehensive logging and monitoring
 
-## 🎯 Tutorial Highlights
+## 🛠️ Advanced Usage
 
-### Real Data, Real Results
-Every tutorial uses live data from actual APIs:
-- **No mock data** - All examples show real API responses
-- **Live demonstrations** - See current market prices, breaking news, weather data
-- **Production patterns** - Learn best practices for real-world deployment
+### **Extending the Tutorial**
 
-### Code Examples You Can Use
-- **Copy-paste ready** - All code cells are self-contained
-- **Error handling** - Robust error handling patterns
-- **Performance optimized** - Caching and rate limiting examples
-- **Production ready** - Code suitable for real applications
+Want to add more APIs? The tutorial structure makes it easy:
 
-### Progressive Complexity
-- **Beginner**: Simple API calls and basic data retrieval
-- **Intermediate**: Multi-source analysis and data combination
-- **Advanced**: Complex workflows, custom dashboards, ML integration
-
-## 🚀 Quick Start
-
-1. **Open `01_quick_start.ipynb`** for your first tutorial
-2. **Run all cells** to see live data retrieval
-3. **Modify parameters** to explore different data sources
-4. **Check real-time results** - prices, news, weather will be current!
-
-## 📋 Prerequisites
-
-- **Python 3.8+** installed
-- **MCP Server running** (see main README for setup)
-- **Internet connection** for API access
-- **Jupyter Notebook** or JupyterLab
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### Jupyter can't connect to MCP server
-```bash
-# Check if server is running
-curl http://localhost:3000/health
-
-# Restart server if needed
-python src/server.py
-```
-
-#### Missing dependencies
-```bash
-# Install missing packages
-pip install package_name
-
-# Or install all demo requirements
-pip install -r demos/requirements.txt
-```
-
-#### API rate limits
 ```python
-# Enable caching in config.yaml
-cache:
-  enabled: true
-  default_ttl: 300
+def get_new_api_data(param):
+    """Template for adding new APIs"""
+    try:
+        # Your API call here
+        response = requests.get(f"https://api.example.com/{param}")
+        data = response.json()
+        
+        return {
+            'formatted_data': data['field'],
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+    except Exception as e:
+        return {'error': str(e)}
 ```
 
-### Getting Help
+### **Error Handling Pattern**
 
-- **Issues**: Check the main repository issues
-- **Discussions**: Ask questions in GitHub Discussions  
-- **Documentation**: Refer to API_REFERENCE.md for detailed tool specs
+The tutorial demonstrates robust error handling:
 
-## 📈 Performance Tips
-
-### Optimize for Large Datasets
 ```python
-# Use caching for repeated requests
-cache_key = f"analysis_{symbol}_{date}"
-if cache_key in cache:
-    return cache[cache_key]
-
-# Batch API requests when possible
-symbols = ["AAPL", "GOOGL", "MSFT"]
-results = await get_multiple_stocks(symbols)
+# Graceful error handling example
+result = get_stock_data('AAPL')
+if 'error' not in result:
+    # Process successful data
+    display_stock_info(result)
+else:
+    # Handle errors gracefully
+    print(f"❌ Error: {result['error']}")
 ```
 
-### Rate Limit Management
-```python
-# Implement delays between requests
-import asyncio
-await asyncio.sleep(0.1)  # 100ms delay
+## 🤝 Contributing
 
-# Use server-side caching
-# Data is cached automatically for 5 minutes
-```
+Want to improve the tutorial? You can:
 
-### Memory Optimization
-```python
-# Process data in chunks for large datasets
-for chunk in pd.read_csv(file, chunksize=1000):
-    process_chunk(chunk)
+1. **Add New APIs**: Extend with additional data sources
+2. **Improve Visualizations**: Add charts and graphs
+3. **Enhance Error Handling**: More robust error management
+4. **Add Caching**: Implement local caching strategies
 
-# Clear variables when done
-del large_dataframe
-import gc; gc.collect()
-```
+## 📞 Support & Resources
 
-## 🎨 Visualization Gallery
+- **GitHub Repository**: [universal-public-data-mcp-server](https://github.com/inamdarmihir/universal-public-data-mcp-server)
+- **Issues & Questions**: Use GitHub Issues for support
+- **Documentation**: Complete API docs in the `docs/` folder
+- **Contributing Guide**: See `CONTRIBUTING.md` for guidelines
 
-### Interactive Charts
-- **Financial**: Real-time stock price charts, portfolio dashboards
-- **Economic**: GDP trends, unemployment maps, inflation indicators
-- **Scientific**: Research paper networks, space object trajectories
-- **Environmental**: Weather maps, air quality heatmaps, disaster timelines
-- **Technology**: GitHub star histories, language trend analysis
+## 🎊 Start Learning!
 
-### Dashboard Examples
-- **Market Intelligence**: Multi-asset tracking with news sentiment
-- **Economic Observatory**: Regional economic indicator comparison
-- **Research Hub**: Academic paper discovery and citation analysis
-- **News Central**: Real-time breaking news with sentiment analysis
-- **Climate Monitor**: Global weather and environmental tracking
+Ready to explore real-time data? Open `universal_mcp_demo.ipynb` and start your journey with the Universal Public Data MCP Server!
 
-## 🌟 Featured Use Cases
-
-### Investment Analysis Pipeline
-```python
-# Get stock data
-stock_data = await get_stock_data("AAPL")
-
-# Get related news sentiment  
-news_sentiment = await analyze_media_sentiment("Apple Inc", "1w")
-
-# Get economic context
-economic_data = await get_economic_indicators("gdp", "1y")
-
-# Combine for investment decision
-investment_score = calculate_investment_score(stock_data, news_sentiment, economic_data)
-```
-
-### Research Discovery Engine
-```python
-# Search recent papers
-papers = await search_research_papers("machine learning", recent=True)
-
-# Get trending GitHub repos
-github_trends = await get_github_trends("weekly", language="python")
-
-# Analyze research trends
-trends = correlate_research_and_development(papers, github_trends)
-```
-
-### Environmental Monitoring System
-```python
-# Get current weather
-weather = await get_weather_data("California")
-
-# Check air quality
-air_quality = await get_air_quality("Los Angeles")
-
-# Monitor disaster alerts
-disasters = await get_disaster_alerts("California", ["earthquake", "wildfire"])
-
-# Generate environmental report
-report = generate_environmental_report(weather, air_quality, disasters)
-```
-
----
-
-**🎉 Start exploring real public data with these comprehensive tutorials!**
-
-*Each notebook demonstrates production-ready patterns using live APIs - no mock data anywhere.* 
+**Happy coding and data exploring! 🚀**
