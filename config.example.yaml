@@ -1,0 +1,45 @@
+# Universal Public Data MCP Server Configuration
+# Copy this file to config.yaml and adjust values as needed
+
+server:
+  debug: false
+  log_level: INFO
+
+cache:
+  enabled: true
+  default_ttl: 300
+  max_size: 1000
+  redis_url: "redis://localhost:6379/0"
+
+rate_limit:
+  enabled: true
+  requests_per_minute: 60
+  burst_limit: 10
+
+# Optional API keys for enhanced functionality
+api_keys:
+  nasa: ""
+  alpha_vantage: ""
+  news_api: ""
+  openweather: ""
+  airnow: ""
+  github: ""
+
+# Custom API endpoints (optional)
+apis:
+  # Government APIs
+  census_api_base: "https://api.census.gov/data"
+  fred_api_base: "https://api.stlouisfed.org/fred"
+  
+  # Scientific APIs
+  nasa_api_base: "https://api.nasa.gov"
+  noaa_api_base: "https://api.weather.gov"
+  
+  # Financial APIs
+  coingecko_api_base: "https://api.coingecko.com/api/v3"
+  
+  # News APIs
+  newsapi_base: "https://newsapi.org/v2"
+  
+  # Technology APIs
+  github_api_base: "https://api.github.com" 

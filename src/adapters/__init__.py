@@ -1,0 +1,1 @@
+# Data adapters for Universal Public Data MCP Server 
