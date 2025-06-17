@@ -70,7 +70,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "universal-public-data-mcp=server:main",
+            "universal-public-data-mcp=server:run",
         ],
     },
     project_urls={
