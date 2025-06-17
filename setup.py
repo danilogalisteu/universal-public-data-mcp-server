@@ -35,6 +35,7 @@ setup(
     keywords="mcp, llm, ai, public-data, api, government, scientific, financial",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
+    py_modules=["server"],
     python_requires=">=3.8",
     install_requires=[
         "mcp>=1.0.0",
