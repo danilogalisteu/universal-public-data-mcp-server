@@ -788,11 +788,14 @@ async def main():
         logger.error(f"Server startup failed: {e}", exc_info=True)
         sys.exit(1)
 
-if __name__ == "__main__":
+def run():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
-        sys.exit(1) 
+        sys.exit(1)
+
+if __name__ == "__main__":
+    run()
